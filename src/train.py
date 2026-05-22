@@ -28,8 +28,6 @@ def train(
         learning_rate=1e-4,
         num_train_epochs=6,
         report_to="none",
-        do_train=True,
-        do_eval=True,
     )
     data_collator = DataCollatorWithPadding(
         tokenizer=tokenizer,
@@ -88,11 +86,9 @@ def main(
             train_dataset=train_dataset,
             valid_dataset=eval_dataset,
         )
-        model.save_adapter(
-            output_dir / f"adapter-{base_name}-{task.name}",
-            lora_adapter_name,
-            with_head=True,
-        )
+        adapter_save_path = output_dir / f"adapter-{base_name}-{task.name}"
+        model.save_adapter(adapter_save_path, lora_adapter_name, with_head=False)
+        model.save_head(str(adapter_save_path), task_head)
 
 
 if __name__ == "__main__":
