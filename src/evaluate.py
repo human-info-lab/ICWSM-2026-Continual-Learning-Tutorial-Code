@@ -120,9 +120,19 @@ def main(
 
         # Fresh model per task so adapters don't accumulate
         model: AdaptersModel = AutoAdapterModel.from_pretrained(model_name)
+
+        # Load the adapter and activate it
         lora_adapter_name = f"{base_name}-lora"
-        model.load_adapter(str(adapter_path), load_as=lora_adapter_name, with_head=True)
+        model.load_adapter(
+            str(adapter_path), load_as=lora_adapter_name, with_head=False
+        )
         model.set_active_adapters(lora_adapter_name)
+
+        # Load the head separately since we saved it with with_head=False
+        model.load_head(str(adapter_path))
+        task_head_name = f"{base_name}-head"
+        model.active_head = task_head_name
+
         model.eval()
 
         test_split = task.get("test", None) or task.get("valid", None)
