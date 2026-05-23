@@ -29,12 +29,9 @@ def download_and_extract(url: str):
 
 
 def preprocess():
-    train_path = (
-        Path(__file__).parents[1] / "data" / "raw" / "StanceDataset" / "train.csv"
-    )
-    test_path = (
-        Path(__file__).parents[1] / "data" / "raw" / "StanceDataset" / "test.csv"
-    )
+    raw_path = Path(__file__).parents[1] / "data" / "raw"
+    train_path = raw_path / "StanceDataset" / "train.csv"
+    test_path = raw_path / "StanceDataset" / "test.csv"
     train_df = pd.read_csv(train_path, encoding="latin-1", engine="python")
     train_df["Target-Stance"] = train_df["Target"] + "-" + train_df["Stance"]
     train_df, valid_df = train_test_split(
