@@ -1,6 +1,12 @@
 # ICWSM 2026 — Continual Learning Tutorial
 
-Companion code for the ICWSM 2026 tutorial on **Continual Learning for NLP**. It demonstrates Domain-Incremental Learning (Domain-IL) using LoRA adapters on the [SemEval-2016 Task 6](http://alt.qcri.org/semeval2016/task6/) Stance Detection dataset — a shared classification head is trained sequentially across 6 stance targets (HC, FM, CC, AT, AB, DT).
+Companion code for the ICWSM 2026 tutorial on **Continual Learning for NLP**. It demonstrates Domain-Incremental Learning (Domain-IL) using LoRA adapters on the [SemEval-2016 Task 6](http://alt.qcri.org/semeval2016/task6/) Stance Detection dataset — a shared classification head is trained sequentially across various stance targets (HC, FM, CC, etc).
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/human-info-lab/ICWSM-2026-Continual-Learning-Tutorial-Code/blob/main/colab_setup.ipynb)
+
+## Google Colab
+
+Click the badge above to open the tutorial notebook in Colab. It walks through cloning the repo, installing dependencies, downloading data, training, and evaluation — no local setup required. Enable a GPU runtime first (**Runtime → Change runtime type → T4 GPU**).
 
 ## Quick start
 
