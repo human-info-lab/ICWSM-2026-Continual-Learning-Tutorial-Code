@@ -123,6 +123,11 @@ def main(
 
     cl_metrics = compute_cl_metrics(available_tasks, perf_matrix) if T > 1 else {}
 
+    cl_metrics["task_names"] = [t.name for t in available_tasks]
+    cl_metrics["perf_matrix"] = (
+        perf_matrix  # full T×T matrix; None for upper triangular
+    )
+
     out_path = output_dir / "eval_results.json"
     out_path.write_text(json.dumps(cl_metrics, indent=2))
     print(f"\nResults saved → {out_path}")
