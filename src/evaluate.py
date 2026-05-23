@@ -2,6 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
+import click
 from adapters import (
     AdapterTrainer,
     AutoAdapterModel,
@@ -128,5 +129,24 @@ def main(
     return cl_metrics
 
 
+@click.command()
+@click.option("--model-name", default="roberta-base", help="Pre-trained model name.")
+@click.option("--benchmark", default="stance", help="Benchmark name.")
+@click.option("--method", "method_name", default="sft", help="Method name (sft or er).")
+@click.option("--output-dir", default="output", help="Output directory.")
+def cli(
+    model_name: str,
+    benchmark: str,
+    method_name: str,
+    output_dir: str,
+):
+    main(
+        model_name=model_name,
+        benchmark=benchmark,
+        method_name=method_name,
+        output_dir=output_dir,
+    )
+
+
 if __name__ == "__main__":
-    main()
+    cli()
