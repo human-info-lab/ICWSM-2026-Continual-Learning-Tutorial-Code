@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import click
 from adapters import (
     AutoAdapterModel,
     ModelWithFlexibleHeadsAdaptersMixin,
@@ -8,7 +9,7 @@ from adapters import (
 from transformers import AutoTokenizer, PreTrainedModel, PreTrainedTokenizerBase
 
 from src.data import load_data_dil
-from src.methods import SequentialFineTuning
+from src.methods import ExperienceReplay, SequentialFineTuning
 
 AdaptersModel = ModelWithFlexibleHeadsAdaptersMixin | PreTrainedModel
 
@@ -54,12 +55,16 @@ def main(
     benchmark: str = "stance",
     method_name: str = "sft",
     output_dir: str | Path = "output",
+    #
+    buffer_size: int = 100,
 ):
     if method_name is None:
         method_name = "sft"
 
     if method_name == "sft":
         method = SequentialFineTuning()
+    elif method_name == "er":
+        method = ExperienceReplay(buffer_size=buffer_size)
     else:
         raise ValueError(f"Method {method_name} not recognized.")
 
@@ -94,5 +99,31 @@ def main(
         model.save_head(str(task_output_dir), builder.task_head_name)
 
 
+@click.command()
+@click.option("--model-name", default="roberta-base", help="Pre-trained model name.")
+@click.option("--benchmark", default="stance", help="Benchmark name.")
+@click.option("--method", "method_name", default="sft", help="Method name (sft or er).")
+@click.option("--output-dir", default="output", help="Output directory.")
+@click.option(
+    "--buffer-size",
+    default=100,
+    help="Buffer size for Experience Replay (only applicable if method is 'er').",
+)
+def cli(
+    model_name: str,
+    benchmark: str,
+    method_name: str,
+    output_dir: str,
+    buffer_size: int,
+):
+    main(
+        model_name=model_name,
+        benchmark=benchmark,
+        method_name=method_name,
+        output_dir=output_dir,
+        buffer_size=buffer_size,
+    )
+
+
 if __name__ == "__main__":
-    main()
+    cli()
