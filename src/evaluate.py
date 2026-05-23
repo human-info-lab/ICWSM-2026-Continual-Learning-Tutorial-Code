@@ -67,17 +67,17 @@ def evaluate(
     return metrics
 
 
-def _adapter_path(output_dir: Path, benchmark: str, task_name: str) -> Path:
-    return output_dir / f"adapter-{benchmark}-{task_name}"
+def _adapter_path(output_dir: Path, task_name: str) -> Path:
+    return output_dir / f"adapter-{task_name}"
 
 
-def _load_model(model_name: str, adapter_path: Path, benchmark: str) -> AdaptersModel:
+def _load_model(model_name: str, adapter_path: Path) -> AdaptersModel:
     model: AdaptersModel = AutoAdapterModel.from_pretrained(model_name)
-    lora_name = f"{benchmark}-lora"
+    lora_name = "task-lora"
     model.load_adapter(str(adapter_path), load_as=lora_name, with_head=False)
     model.set_active_adapters(lora_name)
     model.load_head(str(adapter_path))
-    model.active_head = f"{benchmark}-head"
+    model.active_head = "task-head"
     model.eval()
     return model
 
@@ -85,17 +85,15 @@ def _load_model(model_name: str, adapter_path: Path, benchmark: str) -> Adapters
 def main(
     model_name: str = "roberta-base",
     benchmark: str = "stance",
+    method_name: str = "sft",
     output_dir: str | Path = "output",
 ) -> dict[str, dict]:
-    output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True, parents=True)
+    output_dir: Path = Path(output_dir) / benchmark / method_name
 
     tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(model_name)
     tasks = load_data_dil(tokenizer)
 
-    available_tasks = [
-        t for t in tasks if _adapter_path(output_dir, benchmark, t.name).exists()
-    ]
+    available_tasks = [t for t in tasks if _adapter_path(output_dir, t.name).exists()]
     if not available_tasks:
         print("[WARN] No saved adapters found.")
         return {}
@@ -108,8 +106,7 @@ def main(
         print(f"\n══ Adapter {t_idx + 1}/{T}: '{adapter_task.name}' ══")
         model = _load_model(
             model_name,
-            _adapter_path(output_dir, benchmark, adapter_task.name),
-            benchmark,
+            _adapter_path(output_dir, adapter_task.name),
         )
 
         for j_idx in range(t_idx + 1):
