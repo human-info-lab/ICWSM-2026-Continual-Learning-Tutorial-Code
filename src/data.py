@@ -42,6 +42,7 @@ def load_data_dil(tokenizer: PreTrainedTokenizerBase) -> TaskList:
         "Legalization of Abortion": "AB",
         "Donald Trump": "DT",
     }
+    targets_order = ["HC", "FM", "CC", "AT", "AB", "DT"]
     print("Targets:", df["Target"].unique())
     df["Target"] = df["Target"].map(targets)
     df["TaskStance"] = "_" + df["Target"] + ":" + df["Stance"]
@@ -105,7 +106,7 @@ def load_data_dil(tokenizer: PreTrainedTokenizerBase) -> TaskList:
         # )
     )
     tasks = TaskList()
-    for terget in targets.values():
+    for terget in targets_order:
         task_name = f"Task_{terget}"
         task_ds = datasets.filter(lambda x: x["targets"] == terget)
         task_ds = task_ds.remove_columns(["targets"])
