@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import random
 from pathlib import Path
 
 from adapters import AdapterTrainer, ModelWithFlexibleHeadsAdaptersMixin
+from datasets import Dataset, concatenate_datasets
 from transformers import (
     DataCollatorWithPadding,
     EarlyStoppingCallback,
@@ -106,6 +108,57 @@ class SequentialFineTuning(CLMethod):
             model=model,
             tokenizer=tokenizer,
             train_dataset=task["train"],
+            valid_dataset=task["valid"],
+            output_dir=output_dir,
+        )
+
+
+class ExperienceReplay(CLMethod):
+    """Experience replay with a fixed memory budget via reservoir sampling (Algorithm R).
+
+    Each incoming example is accepted with probability M/k (k = total seen so far),
+    replacing a random existing entry when the buffer is full. The buffer never exceeds
+    buffer_size examples and never retains references to past full datasets.
+    """
+
+    def __init__(self, buffer_size: int):
+        self.buffer_size = buffer_size
+        self._buffer: list[dict] = []
+        self._total_seen: int = 0
+
+    @property
+    def name(self) -> str:
+        return f"er-{self.buffer_size}"
+
+    def after_task(self, model, task, task_idx):
+        # Algorithm for reservoir sampling
+        for i in range(len(task["train"])):
+            self._total_seen += 1
+            example = task["train"][i]
+            if len(self._buffer) < self.buffer_size:
+                self._buffer.append(example)
+            else:
+                j = random.randrange(self._total_seen)
+                if j < self.buffer_size:
+                    self._buffer[j] = example
+
+    def train_task(self, model, tokenizer, task, task_idx, output_dir):
+        if self._buffer:
+            keys = self._buffer[0].keys()
+            buffer_dataset = Dataset.from_dict(
+                {k: [ex[k] for ex in self._buffer] for k in keys}
+            )
+            for col in buffer_dataset.column_names:
+                buffer_dataset = buffer_dataset.cast_column(
+                    col, task["train"].features[col]
+                )
+            train_data = concatenate_datasets([task["train"], buffer_dataset])
+        else:
+            train_data = task["train"]
+        train(
+            model=model,
+            tokenizer=tokenizer,
+            train_dataset=train_data,
             valid_dataset=task["valid"],
             output_dir=output_dir,
         )
