@@ -220,3 +220,4 @@ data/
 output/
 .DS_Store
 trainer_output/
+CLAUDE.md
